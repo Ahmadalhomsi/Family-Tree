@@ -1,0 +1,1681 @@
+// GG class
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package displaygraphics;
+
+import java.util.*;
+import javax.swing.*;
+import java.awt.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+/**
+ *
+ * @author xandros
+ */
+class Node {
+
+    private int Pos[] = new int[2];
+    public Kisi data; //data for storage
+    private int depth;
+    public ArrayList<Node> children;  // it was List
+    private Node parent; //parent to start the tree
+
+    public Node getParent() {
+        return parent;
+    }
+
+    public Node(Kisi data) {
+        children = new ArrayList<>();
+        this.data = data;
+    }
+
+    public Node addChild(Node node) {
+        children.add(node);
+        node.parent = this;
+        return this;
+    }
+
+    public int getDepth() {
+        return depth;
+    }
+
+    public void setDepth(int depth) {
+        this.depth = depth;
+    }
+
+    public int[] getPos() {
+        return Pos;
+    }
+
+    public void setPos(int[] Pos) {
+        this.Pos = Pos;
+    }
+
+}
+
+public class GG {
+
+    static int FLB = 0; // First Line Blocker
+    static int count = 0; // Counter for the classes and excel cells
+    static int cCount = -1; // Class Cuunter for ArryaList
+
+    static int AASindex = 0;  // Aile Adi Sayfa Index
+    static int SayfaIK[] = new int[4]; // Her Sayfadaki ilk kisinin indexi
+    static boolean SB = false;
+
+    static int MaxPE[] = new int[4]; // Max Elemnts of every page
+    static int MaxPEindex = 0;
+
+    static boolean BSID = false; // Boolean ID search
+
+    //  SayfaIK[AASindex]
+    static ArrayList<Node> KKGAL = new ArrayList<>(); // Kisi'nin Kan grubu ArrayList
+
+    static ArrayList<Kisi> KAL = new ArrayList<>(); // Kisi ArrayList
+    static ArrayList<Kisi> TKAL = new ArrayList<>(); // Total Kisi ArrayList
+
+    static boolean checker = false; // ID tekrar Checker
+
+    public static void excel(int s, String AA, int SID) throws FileNotFoundException, IOException {
+
+        File file = new File("C:\\Users\\tarik\\Downloads\\Study\\BM\\2,\\1. D\\ProLab\\Prolab 3\\Prolab 3 (1).xlsx");   //creating a new file instance  
+        FileInputStream fis = new FileInputStream(file);   //obtaining bytes from the file  
+        //creating Workbook instance that refers to .xlsx file  
+        XSSFWorkbook wb = new XSSFWorkbook(fis);
+        XSSFSheet sheet = wb.getSheetAt(s - 1);     //creating a Sheet object to retrieve object  
+        Iterator<Row> itr = sheet.iterator();    //iterating over excel file  
+        while (itr.hasNext()) {
+            Row row = itr.next();
+            Iterator<Cell> cellIterator = row.cellIterator();   //iterating over each column  
+            while (cellIterator.hasNext()) {
+                Cell cell = cellIterator.next();
+                switch (cell.getCellType()) {
+                    case Cell.CELL_TYPE_STRING:    //field that represents string cell type 
+
+                        if (cell.getRowIndex() != 0) {
+
+                            count++;
+
+                            if (cell.getColumnIndex() == 1 && checker == false) {
+                                KAL.get(cCount).setAd(cell.getStringCellValue());
+                            }
+
+                            if (cell.getColumnIndex() == 2 && checker == false) {
+                                KAL.get(cCount).setSoyad(cell.getStringCellValue());
+
+                                if ((cell.getRowIndex() == 1) && (cell.getStringCellValue().equals(AA))) {
+                                    AASindex = s - 1;
+                                    SB = true;
+                                    SayfaIK[s - 1] = KAL.size() - 1;
+                                    System.out.println("+++++++++++++: " + KAL.size());
+                                }
+
+                            }
+
+                            if (cell.getColumnIndex() == 4 && checker == false) {
+                                // Eşi
+                                KAL.get(cCount).setEsi(cell.getStringCellValue());
+                            }
+
+                            if (cell.getColumnIndex() == 6 && checker == false) {
+                                KAL.get(cCount).setAnneAdi(cell.getStringCellValue());
+                            }
+
+                            if (cell.getColumnIndex() == 7 && checker == false) {
+                                KAL.get(cCount).setBabaAdi(cell.getStringCellValue());
+                            }
+
+                            if (cell.getColumnIndex() == 8 && checker == false) {
+                                //System.out.println("KKK: " + count);
+
+                                KAL.get(cCount).setKanGrubu(cell.getStringCellValue());
+                            }
+
+                            if (cell.getColumnIndex() == 9 && checker == false) {
+                                KAL.get(cCount).setMeslek(cell.getStringCellValue());
+                            }
+
+                            if (cell.getColumnIndex() == 10 && checker == false) {
+                                // Medeni Hali
+                                KAL.get(cCount).setMedeniHali(cell.getStringCellValue());
+                            }
+
+                            if (cell.getColumnIndex() == 11 && checker == false) {
+                                KAL.get(cCount).setKizlikSoyadi(cell.getStringCellValue());
+                            }
+
+                            if (cell.getColumnIndex() == 12 && checker == false) {
+                                KAL.get(cCount).setCinsiyet(cell.getStringCellValue());
+                            }
+
+                            System.out.print(cell.getStringCellValue() + "\t\t\t");
+                        }
+
+                        break;
+
+                    case Cell.CELL_TYPE_NUMERIC:    //field that represents number cell type  
+
+                        if (cell.getRowIndex() != 0) {
+
+                            if (cell.getColumnIndex() == 0) {
+
+                                //System.out.println("AAA: " + cell.getNumericCellValue());
+                                ///// you need to add the HashSet here instead of for
+                                // for tekrar
+                                // if true means there is tekrar
+                                for (int i = 0; i < KAL.size(); i++) {
+                                    if ((int) cell.getNumericCellValue() == KAL.get(i).getId()) {
+                                        //System.out.println("Tekrar ed");
+                                        checker = true;
+                                        break;
+                                    } else {
+                                        checker = false;
+                                    }
+
+                                    if ((int) cell.getNumericCellValue() == SID) {
+                                        BSID = true;
+                                    }
+
+                                }
+                                if (checker == false) {
+                                    //System.out.println("AAA2: " + cell.getNumericCellValue());
+                                    cCount++;
+                                    KAL.add(new Kisi());
+                                    KAL.get(cCount).setId((int) cell.getNumericCellValue());
+                                    MaxPE[MaxPEindex]++;
+                                }
+
+                                //----------  
+                            }
+
+                            if (cell.getColumnIndex() == 3 && checker == false) {
+                                //System.out.println("ZZZ: " + count);
+
+                                //System.out.print(cell.getDateCellValue() + " | ");
+                                KAL.get(cCount).setDogum(cell.getDateCellValue());
+                            }
+
+                            if (cell.getColumnIndex() == 5 && checker == false) {
+                                //System.out.println("ZZZ: " + count);
+
+                                //System.out.print(cell.getDateCellValue() + " | ");
+                                KAL.get(cCount).setEsID((int) cell.getNumericCellValue());
+                            }
+
+                            System.out.print((int) cell.getNumericCellValue() + "\t\t\t");
+                            count++;
+                        }
+
+                        break;
+
+                    default:
+                        //System.out.print("\t\t\t\t");
+                        break;
+
+                }
+            }
+            System.out.println(""); // New line
+
+        }
+        System.out.println("End of excel function");
+        MaxPEindex++;
+    }
+
+    public static int NL(int ind) // Nodes linker with recursive
+    {
+
+        System.out.println("\nin NL Method");
+        System.out.println("QQ:" + node[ind].data.getAd());
+
+        System.out.println("toString: " + node[ind].children.toString());
+        for (int j = 0; j < node[ind].children.size(); j++) {
+            System.out.print(node[ind].children.get(j).data.getAd() + " ,");
+        }
+
+        if (node[ind].children.isEmpty()) {
+            System.out.println("No childrens");
+            return 0;
+        } else {
+            for (int j = 0; j < node[ind].children.size(); j++) {
+
+                for (int k = ind; k < KAL.size(); k++) {
+
+                    if (node[ind].children.get(j) == node[k]) {
+
+                        node[ind].children.set(j, node[k]);
+                        NL(k);
+
+                    }
+                }
+            }
+            return 1;
+        }
+
+    }
+
+    static int MD = 0; // agacin maksimum derinlik
+    static ArrayList<Node> UKL = new ArrayList<>(); // Uvey Kardes Listesi
+    static ArrayList<Node> COD = new ArrayList<>(); // Çocuğu olmayan düğümleri
+
+    public static int DFS(int ind, int dep) // Nodes linker with recursive
+    {
+
+        System.out.println("\n in DFS Method");
+        System.out.println("DFS:" + node[ind].data.getAd() + " dep: " + dep);
+
+        if (MD < dep) {
+            MD = dep;
+        }
+
+        node[ind].setDepth(dep);
+
+        if (node[ind].children.isEmpty()) {
+            System.out.println("No childrens");
+            COD.add(node[ind]);
+            return 0;
+        } else {
+            System.out.print("Cildrens: ");
+            for (int i = 0; i < node[ind].children.size(); i++) {
+                System.out.print(node[ind].children.get(i).data.getAd() + ", ");
+            }
+
+            for (int j = 0; j < node[ind].children.size(); j++) {
+
+                for (int k = 0; k < KAL.size(); k++) {
+                    if (node[ind].children.get(j) == node[k]) {
+                        DFS(k, dep + 1);
+                    }
+                }
+            }
+            return 1;
+        }
+
+    }
+
+    public static int BFS(int ind, int dep, Node Super) // Nodes linker with recursive
+    {
+        ////////////////////// JUST MAKE IT BY DEPTH
+        System.out.println("\n in BFS Method");
+        System.out.println("BFS:" + node[ind].data.getAd() + " dep: " + dep);
+
+        // add it right here the for of DEPTH
+        if (Super != null) {
+            System.out.println("Kisi: " + node[ind].data.getAd() + " " + node[ind].data.getSoyad());
+            System.out.println("Annesi: " + node[ind].data.getAnneAdi() + " Babasi: " + node[ind].data.getBabaAdi());
+            System.out.println("VZVZVZV " + Super.data.getAd());
+
+            String Arr[] = Super.data.getEsi().split(" "); // Taking the firs name
+            System.out.println("ArRRRRR: " + Arr[0]);
+            if ((Super.data.getCinsiyet().equals("Erkek")) && (!Arr[0].equals(node[ind].data.getAnneAdi()))) {
+                UKL.add(node[ind]);
+                System.out.println("Kisi: " + node[ind].data.getAd() + " " + node[ind].data.getSoyad());
+                System.out.println("Annesi: " + node[ind].data.getAnneAdi() + " Babasi: " + node[ind].data.getBabaAdi());
+                System.out.println("YAAAAAAAAAAAAAAAAAAAAAAAAAAH " + Super.data.getAd());
+
+            }
+
+            if ((Super.data.getCinsiyet().equals("Kadın")) && (!Arr[0].equals(node[ind].data.getBabaAdi()))) {
+                UKL.add(node[ind]);
+                System.out.println("Kisi: " + node[ind].data.getAd() + " " + node[ind].data.getSoyad());
+                System.out.println("Annesi: " + node[ind].data.getAnneAdi() + " Babasi: " + node[ind].data.getBabaAdi());
+                System.out.println("YAAAAAAAAAAAAAAAAAAAAAAAAAAH " + Super.data.getAd());
+
+            }
+
+        }
+
+        if (MD < dep) {
+            MD = dep;
+        }
+
+        node[ind].setDepth(dep);
+
+        if (node[ind].children.isEmpty()) {
+            System.out.println("No childrens");
+            return 0;
+        } else {
+            Super = node[ind];
+            System.out.print("Cildrens: ");
+            for (int i = 0; i < node[ind].children.size(); i++) {
+                System.out.print(node[ind].children.get(i).data.getAd() + ", ");
+            }
+
+            for (int j = 0; j < node[ind].children.size(); j++) {
+
+                for (int k = 0; k < KAL.size(); k++) {
+                    if (node[ind].children.get(j) == node[k]) {
+                        BFS(k, dep + 1, Super);
+                    }
+                }
+            }
+            return 1;
+        }
+
+    }
+
+    public static int Nprinter(int ind, int dep) // Nodes linker with recursive
+    {
+
+        System.out.println("\n in NP Method");
+        System.out.println("BABA: " + node[ind].data.getAd() + " Yakinlik derecesi: " + dep);
+
+        if (MD < dep) {
+            MD = dep;
+        }
+
+        node[ind].setDepth(dep);
+
+        if (node[ind].children.isEmpty()) {
+            System.out.println("Çocuklar yok");
+            return 0;
+        } else {
+            System.out.print("Çocukları: ");
+            for (int i = 0; i < node[ind].children.size(); i++) {
+                System.out.print(node[ind].children.get(i).data.getAd() + ", ");
+            }
+
+            for (int j = 0; j < node[ind].children.size(); j++) {
+
+                for (int k = 0; k < KAL.size(); k++) {
+                    if (node[ind].children.get(j) == node[k]) {
+                        Nprinter(k, dep + 1);
+                    }
+                }
+            }
+            return 1;
+        }
+
+    }
+
+    public static Node[] Name_Sorter(Node names[], int n) {
+
+        // create string array called names
+        Node temp;
+        for (int i = 0; i < n; i++) {
+            for (int j = i + 1; j < n; j++) {
+
+                // to compare one string with other strings
+                if (names[i].data.getAd().compareTo(names[j].data.getAd()) > 0) {
+                    // swapping
+                    temp = names[i];
+                    names[i] = names[j];
+                    names[j] = temp;
+                }
+            }
+        }
+
+        return names;
+
+    }
+
+    static Node node[]; // Move it up
+
+    public static void Yorginizer() { // Yeni Orginizer for adding cocuklar to kisi cocuk NODE
+
+        node = new Node[TKAL.size()];
+
+        for (int i = 0; i < TKAL.size(); i++) { // for creating Kisi Nodes
+            node[i] = new Node(KAL.get(i));
+        }
+
+        //System.out.println("************* " + node[32].data.getAd() + " " + node[32].data.getSoyad());
+        for (int i = 0; i < KAL.size(); i++) {
+            for (int j = 0; j < TKAL.size(); j++) {
+
+                // HashSet lazim maybe name like this  not lazim                       
+                if (KAL.get(i).getEsi() != null) {
+                    String Arr[] = KAL.get(i).getEsi().split(" "); // Taking the firs name
+                    //System.out.println("SSSS " + Arr[0]);
+                    //                                                                                                                             it takes the firs name of esi                                          
+                    if (((((TKAL.get(j).getBabaAdi().equals(KAL.get(i).getAd())) && (TKAL.get(j).getAnneAdi().equals(Arr[0]))) || ((TKAL.get(j).getAnneAdi().equals(KAL.get(i).getAd())) && (TKAL.get(j).getBabaAdi().equals(Arr[0])))))) {
+                        //System.out.println("ORG WORK");
+                        node[i].addChild(node[j]);
+                        //System.out.println("EEEE: " + node[j].data.getAd() + " " + node[j].data.getSoyad());
+                        //if() UVEY KARDES
+
+                    }
+                }
+            }
+        }
+
+        //System.out.println("NNNNNNN: " + node[2].data.getAd() + " " + node[2].children.toString());
+        System.out.println("\nALL NODES ID'S");
+
+        for (int i = 0; i < KAL.size(); i++) {
+            System.out.println(node[i].data.getId());
+
+        }
+
+        // Recursive for linking the nodes
+        System.out.println("we are about to enter the NL");
+        NL(0);
+        System.out.println("Entered the NL");
+
+        System.out.println("*** NODDED childs in Yorginizer ***");
+    }
+    
+    public static void Yakinlik(Node B , Node K)
+    {
+        if(B==null || K.getParent() == null)
+        {
+            if(B.data.getCinsiyet().equals("Erkek"))
+                System.out.println("Babasi");
+                
+            if(B.data.getCinsiyet().equals("Kadın")) 
+                System.out.println("Annesi");
+                
+            return;
+        }
+            
+        
+        if(K.data.getCinsiyet().equals("Kadın"))
+                {
+                    if(K.data.getId() != B.data.getId())
+                    {
+                        System.out.print("Annesinin ");
+                    }
+                    
+                    
+                    else
+                    {
+                        System.out.println("Annesi");
+                    }
+                }
+        
+        if(K.data.getCinsiyet().equals("Erkek"))
+                {
+                    if(K.data.getId() != B.data.getId())
+                    {
+                        System.out.print("Babasinin ");
+                        Yakinlik(B , K.getParent());
+                    }
+                    
+                    
+                    else
+                    {
+                        System.out.print("Babasi");
+                    }
+                        
+                    
+                }
+    }
+
+    public static void UveyK() { // Yeni Orginizer for adding cocuklar to kisi cocuk NODE
+
+        node = new Node[TKAL.size()];
+
+        for (int i = 0; i < TKAL.size(); i++) { // for creating Kisi Nodes
+            node[i] = new Node(KAL.get(i));
+        }
+
+        //System.out.println("************* " + node[32].data.getAd() + " " + node[32].data.getSoyad());
+        for (int i = 0; i < KAL.size(); i++) {
+            for (int j = 0; j < TKAL.size(); j++) {
+
+                // HashSet lazim maybe name like this  not lazim                       
+                if (KAL.get(i).getEsi() != null) {
+                    String Arr[] = KAL.get(i).getEsi().split(" "); // Taking the firs name
+                    //System.out.println("SSSS " + Arr[0]);
+                    //                                                                                                                             it takes the firs name of esi                                          
+                    if (((((KAL.get(j).getBabaAdi().equals(KAL.get(i).getAd())) || (TKAL.get(j).getAnneAdi().equals(Arr[0]))) || ((KAL.get(j).getAnneAdi().equals(KAL.get(i).getAd())) && (KAL.get(j).getBabaAdi().equals(Arr[0])))))) {
+                        //System.out.println("ORG WORK");
+                        node[i].addChild(node[j]);
+                        //System.out.println("EEEE: " + node[j].data.getAd() + " " + node[j].data.getSoyad());
+                        //if() UVEY KARDES
+
+                    }
+                }
+            }
+        }
+
+        //System.out.println("NNNNNNN: " + node[2].data.getAd() + " " + node[2].children.toString());
+        System.out.println("\nALL NODES ID'S");
+
+        for (int i = 0; i < KAL.size(); i++) {
+            System.out.println(node[i].data.getId());
+
+        }
+
+        // Recursive for linking the nodes
+        System.out.println("we are about to enter the NL");
+        NL(0);
+        System.out.println("Entered the NL");
+
+        System.out.println("*** NODDED childs in Yorginizer ***");
+    }
+
+    public static void main(String[] args) throws IOException, InterruptedException {
+
+        Scanner s = new Scanner(System.in);
+
+        String AA = new String();
+
+        System.out.println("1- Çocuğu olmayan düğümlerin listesi\n"
+                + "2- Üvey kardeşler listesi\n"
+                + "3- Kan grubu listesi\n"
+                + "4- Soyunda aynı meslek\n"
+                + "5- Soy ağacında aynı isme sahip kişiler\n"
+                + "6- Büyük olan kişinin küçük olan kişiye yakınlık \n"
+                + "7- Kişiye ait soy ağacı  \n"
+                + "8- Soy ağacının kaç nesilden oluştu \n"
+                + "9-  isimden sonra kaç nesil geldi \n"
+                + "10- Aile'ye Gore Soy Agaci Goster \n\n");
+
+        System.out.println("Menuden Seciniz");
+        int sec = s.nextInt();
+
+        System.out.println("Aile: " + AA);
+        System.out.println("BU secildi: " + sec);
+
+        excel(1, AA, 7777);
+        excel(2, AA, 7777);
+        excel(3, AA, 7777);
+        excel(4, AA, 7777);
+
+        TKAL = KAL;
+
+        String SKG; // Secilen kan grubu for search
+
+        switch (sec) {
+            case 1:
+                System.out.println("AD: " + KAL.get(2).getAd() + " Soy: " + KAL.get(2).getSoyad() + " Dogum: " + KAL.get(2).getDogum() + " esi: " + KAL.get(2).getEsID() + " Anne adi: " + KAL.get(2).getAnneAdi() + " Babaadi: " + KAL.get(2).getBabaAdi());
+
+                Yorginizer();
+
+                System.out.println("\n-----");
+
+                for (int i = 0; i < KAL.size(); i++) {
+                    if (node[i].children.isEmpty()) {
+                        COD.add(node[i]);
+                    }
+                }
+
+                System.out.println("******* Çocuğu olmayan düğümleri ********");
+
+                for (int i = 0; i < COD.size(); i++) {
+                    System.out.println(COD.get(i).data.getAd() + " " + COD.get(i).data.getSoyad());
+                }
+
+                System.out.println("******* ------------------------- ********");
+                GUIer();
+
+                break;
+
+            case 2:
+                UveyK();
+
+                for (int i = 0; i < KAL.size(); i++) {
+
+                    if ((node[i].getParent() != null) && (node[i].getParent().data.getCinsiyet().equals("Erkek"))) {
+                        String Arr[] = node[i].getParent().data.getEsi().split(" "); // Taking the firs name
+
+                        if ((!(node[i].data.getAnneAdi().equals(Arr[0]))) && ((node[i].data.getId() != 1))) {
+                            UKL.add(node[i]);
+                        }
+
+                    }
+                    if ((node[i].getParent() != null) && (node[i].getParent().data.getCinsiyet().equals("Kadın"))) {
+                        String Arr[] = node[i].getParent().data.getEsi().split(" "); // Taking the firs name
+                        if ((!(node[i].data.getBabaAdi().equals(Arr[0]))) && (node[i].data.getId() != 1)) {
+                            UKL.add(node[i]);
+                        }
+                    }
+
+                }
+
+                System.out.println("******* Uvey Kardes ********");
+                System.out.println("Uvey Kardes sayisi: " + UKL.size());
+                for (int i = 0; i < UKL.size(); i++) {
+                    System.out.println(UKL.get(i).data.getAd() + " " + UKL.get(i).data.getSoyad() + ", ID: " + UKL.get(i).data.getId());
+                }
+
+                break;
+
+            case 3:
+                System.out.println("Kan grubu listelemek icin kan grubu giriniz:");
+                s.nextLine();
+                SKG = s.nextLine();
+
+                Yorginizer();
+
+                //System.out.println("KGAL toString: " + KGAL.toString());
+                System.out.println("All: ");
+                for (int i = 0; i < KAL.size(); i++) {
+
+                    if ((node[i].data.getKanGrubu().charAt(0) == SKG.charAt(0) && node[i].data.getKanGrubu().charAt(1) == '(')) { // you can add here
+                        KKGAL.add(node[i]);
+                    }
+
+                }
+
+                System.out.println("----------------------");
+
+                System.out.println("Liste: ");
+                for (int i = 0; i < KKGAL.size(); i++) {
+                    System.out.println(KKGAL.get(i).data.getAd() + " " + KKGAL.get(i).data.getSoyad() + " " + KKGAL.get(i).data.getKanGrubu());
+                }
+
+                Node[] arr = new Node[KKGAL.size()];
+                arr = KKGAL.toArray(arr);
+
+                System.out.println("\nSorted: (Alfabe Göre)");
+                Node[] sorted = Name_Sorter(arr, KKGAL.size());
+
+                for (int i = 0; i < sorted.length; i++) {
+                    System.out.println(sorted[i].data.getAd() + " " + sorted[i].data.getSoyad() + " " + sorted[i].data.getKanGrubu());
+                }
+
+                break;
+            case 4:
+
+                Yorginizer();
+                // HasSet added here
+                HashSet<Node> meslekT = new HashSet<Node>(); // Meslek Tekrari ayni olan kisiler
+                // Tekrar of names
+                for (int i = 0; i < KAL.size(); i++) {
+                    for (int j = i + 1; j < KAL.size(); j++) {
+                        if ((node[i].data.getMeslek() != null) && (node[j].data.getMeslek() != null)) {
+                            if (node[i].data.getMeslek().equals(node[j].data.getMeslek()) && node[i].data.getSoyad().equals(node[j].data.getSoyad()) && node[i].data.getCinsiyet().equals("Erkek") && node[j].data.getCinsiyet().equals("Erkek")) { // got the duplicate element } } }
+                                //System.out.println("### Ad ve Soyad: " + KAL.get(i).getAd() + " " + KAL.get(i).getSoyad() + ", Meslek: " + KAL.get(i).getMeslek());
+                                //System.out.println("### Ad ve Soyad: " + KAL.get(j).getAd() + " " + KAL.get(j).getSoyad() + ", Meslek: " + KAL.get(i).getMeslek());
+                                meslekT.add(node[i]);
+                                meslekT.add(node[j]);
+                            }
+                        }
+                    }
+                }
+
+                ArrayList<Node> MeslekTAL = new ArrayList<>(meslekT); // converting the Hashset to an ArrayList
+
+                for (int i = 0; i < MeslekTAL.size(); i++) {
+                    System.out.println("### Ad ve Soyad: " + MeslekTAL.get(i).data.getAd() + " " + MeslekTAL.get(i).data.getSoyad() + ", Meslek: " + MeslekTAL.get(i).data.getMeslek());
+                }
+
+                Node[] arr4 = new Node[MeslekTAL.size()];
+                arr4 = MeslekTAL.toArray(arr4);
+
+                System.out.println("Sorted");
+                Node arr2[] = Name_Sorter(arr4, MeslekTAL.size());
+
+                for (int i = 0; i < MeslekTAL.size(); i++) {
+                    System.out.println("### Ad ve Soyad: " + arr2[i].data.getAd() + " " + arr2[i].data.getSoyad() + ", Meslek: " + arr2[i].data.getMeslek());
+                }
+
+                break;
+
+            case 5:
+
+                System.out.println("Ayni isme sahip kisiler");
+                //ArrayList<Kisi> ayniL = new ArrayList<>();
+
+                // add HasSet here
+                // Tekrar of names
+                for (int i = 0; i < KAL.size(); i++) {
+                    for (int j = i + 1; j < KAL.size(); j++) {
+                        if ((KAL.get(i).getAd().equals(KAL.get(j).getAd())) && (KAL.get(i).getId() != KAL.get(j).getId())) { // got the duplicate element } } }
+                            System.out.println("### Ad ve Soyad: " + KAL.get(i).getAd() + " " + KAL.get(i).getSoyad() + ", Yaş: " + (122 - KAL.get(i).getDogum().getYear()) + ", DD: " + KAL.get(i).getDogum().getYear());
+                            System.out.println("### Ad ve Soyad: " + KAL.get(j).getAd() + " " + KAL.get(j).getSoyad() + ", Yaş: " + (122 - KAL.get(j).getDogum().getYear()) + ", DD: " + KAL.get(i).getDogum().getYear());
+                            System.out.println("------");
+                        }
+                    }
+                }
+
+                break;
+
+            case 6:
+                Yorginizer();
+
+                System.out.println("Buyuk olan kisinin ID'yi giriniz:");
+                int BID = s.nextInt();
+
+                System.out.println("Kucuk olan kisinin ID'yi giriniz:");
+                int KID = s.nextInt();
+                System.out.println("Buyuk ID: " + BID);
+                System.out.println("Kucuk ID: " + KID);
+
+                int yer1 = 0;
+                int yer2 = 0;
+
+                for (int i = 0; i < TKAL.size(); i++) {
+                    if (node[i].data.getId() == BID) {
+                        yer1 = i;
+                    }
+
+                    if (node[i].data.getId() == KID) {
+                        yer2 = i;
+                        break;
+                    }
+                }
+                
+                Yakinlik(node[yer1],node[yer2]);
+
+                break;
+
+            case 7:
+                s.nextLine();
+                System.out.println("Kisinin ID'ni gininiz:");
+                int IDS = s.nextInt();
+
+                System.out.println("IDS: " + IDS);
+
+                KAL.clear();
+                System.out.println("0000000");
+                FLB = 0; // First Line Blocker
+                count = 0; // Counter for the classes and excel cells
+                cCount = -1;
+                AASindex = 0;
+                MaxPEindex = 0;
+
+                excel(1, AA, IDS);
+                if (!BSID) {
+                    KAL.clear();
+                    System.out.println("111111");
+                    FLB = 0; // First Line Blocker
+                    count = 0; // Counter for the classes and excel cells
+                    cCount = -1;
+                }
+
+                excel(2, AA, IDS);
+                if (!BSID) {
+                    KAL.clear();
+                    System.out.println("222222");
+                    FLB = 0; // First Line Blocker
+                    count = 0; // Counter for the classes and excel cells
+                    cCount = -1;
+                }
+
+                excel(3, AA, IDS);
+                if (!BSID) {
+                    KAL.clear();
+                    System.out.println("333333");
+                    FLB = 0; // First Line Blocker
+                    count = 0; // Counter for the classes and excel cells
+                    cCount = -1;
+                }
+
+                excel(4, AA, IDS);
+                if (!BSID) {
+                    System.out.println("444444");
+                    FLB = 0; // First Line Blocker
+                    count = 0; // Counter for the classes and excel cells
+                    cCount = -1;
+                }
+
+                Yorginizer();
+
+                System.out.println("\n-----");
+                Nprinter(0, 0);
+
+                GUIer();
+
+                break;
+
+            case 8:
+                Yorginizer();
+
+                System.out.println("\n-----");
+                Nprinter(0, 0);
+
+                Nprinter(SayfaIK[AASindex], 0); // put 0 if Genel Soy Agac Derinlik
+                //System.out.println("\n\nAAAAAAAAAAAAAAA: \n\n" + KAL.get(SayfaIK[AASindex]).getAd());
+
+                System.out.println("\nSoy ağacının kaç nesilden oluştuğu: " + MD);
+                break;
+
+            case 9:
+                Yorginizer();
+
+                System.out.println("ID'yi giriniz:");
+                int SID = s.nextInt(); // Searching ID
+                int index = 0;
+
+                for (int i = 0; i < KAL.size(); i++) {
+
+                    if (node[i].data.getId() == SID) {
+                        index = i;
+                        break;
+                    }
+
+                }
+
+                Nprinter(NS(node[index]), 0);
+                System.out.println("\nNesil: " + MD);
+
+                break;
+
+            case 10:  /// Aile'ye Gore Soy Agaci Goster    
+                s.nextLine();
+                System.out.println("Aile'nin ismi giriniz:");
+                AA = s.nextLine();
+
+                System.out.println("AA: " + AA);
+
+                KAL.clear();
+                System.out.println("0000000");
+                FLB = 0; // First Line Blocker
+                count = 0; // Counter for the classes and excel cells
+                cCount = -1;
+                AASindex = 0;
+                MaxPEindex = 0;
+
+                excel(1, AA, 7777);
+                if (!SB) {
+                    KAL.clear();
+                    System.out.println("111111");
+                    FLB = 0; // First Line Blocker
+                    count = 0; // Counter for the classes and excel cells
+                    cCount = -1;
+                }
+
+                excel(2, AA, 7777);
+                if (!SB) {
+                    KAL.clear();
+                    System.out.println("222222");
+                    FLB = 0; // First Line Blocker
+                    count = 0; // Counter for the classes and excel cells
+                    cCount = -1;
+                }
+
+                excel(3, AA, 7777);
+                if (!SB) {
+                    KAL.clear();
+                    System.out.println("333333");
+                    FLB = 0; // First Line Blocker
+                    count = 0; // Counter for the classes and excel cells
+                    cCount = -1;
+                }
+
+                excel(4, AA, 7777);
+                if (!SB) {
+                    System.out.println("444444");
+                    FLB = 0; // First Line Blocker
+                    count = 0; // Counter for the classes and excel cells
+                    cCount = -1;
+                }
+
+                Yorginizer();
+
+                System.out.println("\n-----");
+                Nprinter(0, 0);
+
+                GUIer();
+
+                break;
+
+            default:
+                break;
+
+        }
+
+    }
+
+    static int JPC = 1; // JPanel Counter
+    static JPanel panel[];
+    static JPanel square[];
+    static ImageIcon Pic = new ImageIcon("C:\\Users\\tarik\\Downloads\\Study\\BM\\2,\\1. D\\ProLab\\Prolab 3\\UP.png");
+
+    static JLabel Lpic[];
+    static JFrame f = new JFrame();
+
+    public static void GUIer() throws InterruptedException {
+
+        System.out.println("GUIer Method");
+
+        f.setSize(1350, 750);
+        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        f.setLocationRelativeTo(null);
+
+        panel = new JPanel[KAL.size() + 20];
+        square = new JPanel[KAL.size() + 20];
+
+        panel[0] = new JPanel();
+        panel[0].setLayout(new FlowLayout(FlowLayout.LEFT, 2, 5));
+        panel[0].setBounds(550, 25, 120, 50);
+        panel[0].setBackground(Color.BLUE);
+
+        JLabel T = new JLabel();
+        T.setFont(new Font("Arial", Font.PLAIN, 10));
+        T.setForeground(Color.WHITE);
+        T.setText(node[0].data.getAd() + " " + node[0].data.getSoyad());
+
+        // Image
+        Lpic = new JLabel[KAL.size() + 10]; //= new JLabel(Pic);
+        Lpic[0] = new JLabel(Pic);
+        Lpic[1] = new JLabel(Pic);
+
+        panel[0].add(Lpic[0]);
+        panel[0].add(T);
+        f.add(panel[0]);
+
+        //JPanel panel2 = new JPanel();
+        panel[1] = new JPanel();
+        panel[1].setLayout(new FlowLayout(FlowLayout.LEFT, 2, 5));
+        panel[1].setBounds(750, 25, 120, 50);
+        panel[1].setBackground(new Color(150, 0, 150));
+        JLabel T2 = new JLabel();
+        T2.setFont(new Font("Arial", Font.PLAIN, 10));
+        T2.setForeground(Color.WHITE);
+        T2.setText(node[0].data.getEsi()); // it was: node[1].data.getAd() + " " + node[1].data.getSoyad()
+
+        panel[1].add(Lpic[1]); // cant put same pic to this label
+        panel[1].add(T2);
+        f.add(panel[1]);
+
+        /* // it deletes after adding so linked lists
+        panel2.remove(T2); 
+        panel2.remove(Lpic2);
+         */
+        Paneler(0, 725, 50, 725, 80);
+
+        DisplayGraphics m = new DisplayGraphics(KAL.size(), node);
+
+        f.add(m);
+
+        f.setVisible(true);
+    }
+
+    public static int NS(Node s) // Node searcher (From node to kisi)
+    {
+        int index;
+
+        for (int i = 0; i < KAL.size(); i++) {
+            if (node[i] == s) {
+                return i;
+            }
+
+        }
+        return 0;
+
+    }
+
+    public static void Paneler(int u, int x1, int y1, int x2, int y2) // the continues
+    {
+
+        y1 += 50;
+        y2 += 50;
+
+        System.out.println("Paneler fun");
+        /*
+        System.out.println("WW: " + node[u].children.size());
+        System.out.println("WW POS: " + x1 + ", " + y1 + ", " + x2 + ", " + y2);
+         */
+
+        if (node[u].children.size() == 1) {
+
+            y1 += 50;
+            y2 += 50;
+
+            /*
+            g.setColor(Color.ORANGE);
+            g.drawLine(x1, y1, x2, y2);
+             */
+            int q = NS(node[u].children.get(0));
+
+            PanelRes(q, x1 - 75, y1 + 25);
+            Paneler(q, x1, y1, x2, y2);
+
+        }
+
+        if (node[u].children.size() == 2) {
+
+            y1 += 50;
+            y2 += 50;
+
+            x1 -= 120;
+            x2 -= 120;
+
+            if (u != 0) {
+                for (int i = 0; i < node[u].children.size(); i++) {
+                    /*
+                g.setColor(Color.BLUE);
+                g.drawLine(x1, y1, x2, y2);
+                     */
+                    int q = NS(node[u].children.get(i));
+
+                    PanelRes(q, x1 - 75, y1 + 15);
+                    Paneler(q, x1, y1, x2, y2);
+
+                    x1 += 240;
+                    x2 += 240;
+
+                }
+
+            } else {
+                x1 -= 160;
+                x2 -= 160;
+
+                for (int i = 0; i < node[u].children.size(); i++) {
+                    /*
+                g.setColor(Color.BLUE);
+                g.drawLine(x1, y1, x2, y2);
+                     */
+                    int q = NS(node[u].children.get(i));
+
+                    PanelRes(q, x1 + 70, y1 + 30);
+                    Paneler(q, x1 + 70, y1, x2, y2);
+
+                    x1 += 280;
+                    x2 += 280;
+
+                }
+            }
+
+        }
+
+        if (node[u].children.size() == 3) {
+            /*
+            g.setColor(Color.RED);
+             */
+
+            if (u == 0) {
+
+                /*
+                g.drawLine(325, 80, 1125, 80); //  -----
+                 */
+                x1 -= 450;
+                x2 -= 450;
+
+                for (int i = 0; i < node[u].children.size(); i++) {
+                    /*
+                g.setColor(Color.RED);
+                g.drawLine(x1, y1, x2, y2);
+                     */
+
+                    int q = NS(node[u].children.get(i));
+
+                    PanelRes(q, x1 - 75, y1 + 30);
+                    Paneler(q, x1, y1, x2, y2);
+                    /*
+                
+                     */
+
+                    x1 += 450;
+                    x2 += 450;
+
+                }
+
+            } else {
+                y1 += 50;
+                y2 += 50;
+
+                x1 -= 100;
+                x2 -= 100;
+
+                for (int i = 0; i < node[u].children.size(); i++) {
+
+                    /*
+                g.setColor(Color.RED);
+                g.drawLine(x1, y1, x2, y2);
+                     */
+                    int q = NS(node[u].children.get(i));
+
+                    PanelRes(q, x1 - 75, y1 + 10);
+                    Paneler(q, x1, y1, x2, y2);
+
+                    x1 += 100;
+                    x2 += 100;
+
+                }
+
+                /*
+            g.drawLine(x1-300, y1, x2-100, y2-30); //  -----
+                 */
+            }
+
+        }
+
+        if (node[u].children.size() == 4) {
+
+            y1 += 10;
+            y2 += 10;
+            x1 -= 520;
+            x2 -= 520;
+
+            if (u == 0) {
+                for (int i = 0; i < node[u].children.size(); i++) {
+                    /*
+                g.drawLine(x1, y1, x2, y2);
+                     */
+                    int q = NS(node[u].children.get(i));
+
+                    PanelRes(q, x1 - 75, y1 + 10);
+                    Paneler(q, x1, y1, x2, y2);
+
+                    x1 += 345;
+                    x2 += 345;
+                }
+            } else {
+
+                x1 += 240;
+                x2 += 240;
+
+                y1 += 10;
+                y2 += 10;
+
+                //g.drawLine(x1 + 280, y1 - 60, x2 + 280, y2 - 60 + 10);
+                for (int i = 0; i < node[u].children.size(); i++) {
+                    //g.setColor(Color.BLUE);
+                    //g.drawLine(x1 + 145, y1, x2 + 145, y2 + 30);
+                    int q = NS(node[u].children.get(i));
+                    PanelRes(q, x1 + 60, y1 + 70);
+                    Paneler(q, x1, y1 + 30, x2, y2 + 30);
+
+                    x1 += 90;
+                    x2 += 90;
+                }
+            }
+        }
+    }
+
+    public static void PanelRes(int u, int x1, int y1) {
+        System.out.println("PanelRes: " + x1 + " " + y1);
+
+        panel[JPC] = new JPanel();
+        panel[JPC].setLayout(new FlowLayout(FlowLayout.LEFT, 2, 5));
+
+        boolean isMarried = false;
+        if (node[u].data.getEsi() != null) {
+
+            square[JPC] = new JPanel();
+
+            panel[JPC + 1] = new JPanel();
+            panel[JPC + 1].setLayout(new FlowLayout(FlowLayout.LEFT, 2, 5));
+
+            if (node[u].data.getCinsiyet().equals("Erkek")) {
+
+                square[JPC].setBounds(x1 + 35, y1 + 5, 10, 10);
+                panel[JPC + 1].setBackground(new Color(150, 0, 150));
+                panel[JPC].setBounds(x1 - 70, y1 - 30, 120, 50);
+                panel[JPC + 1].setBounds(x1 + 70, y1 - 30, 120, 50);
+            } else {
+                square[JPC].setBounds(x1 + 175, y1 + 5, 10, 10);
+                panel[JPC + 1].setBounds(x1 - 70, y1 - 30, 120, 50);
+                panel[JPC].setBounds(x1 + 70, y1 - 30, 120, 50);
+                panel[JPC + 1].setBackground(Color.BLUE);
+            }
+
+            JLabel T4 = new JLabel();
+            T4.setFont(new Font("Arial Narrow Bold", Font.PLAIN, 9));
+            T4.setForeground(Color.WHITE);
+            T4.setText(node[u].data.getEsi() + " " + node[u].data.getSoyad());
+
+            Lpic[JPC] = new JLabel(Pic);
+
+            panel[JPC + 1].add(Lpic[JPC]); // cant put same pic to this label
+            panel[JPC + 1].add(T4);
+            f.add(panel[JPC + 1]);
+
+            square[JPC].setBackground(Color.ORANGE);
+
+            f.add(square[JPC]);
+
+            isMarried = true;
+
+        } else {
+            panel[JPC].setBounds(x1, y1, 120, 50);
+        }
+
+        if (node[u].data.getCinsiyet().equals("Kadın")) {
+            panel[JPC].setBackground(new Color(150, 0, 150));
+        } else {
+            panel[JPC].setBackground(Color.BLUE);
+        }
+
+        JLabel T3 = new JLabel();
+        T3.setFont(new Font("Arial Narrow Bold", Font.PLAIN, 9));
+        T3.setForeground(Color.WHITE);
+        T3.setText(node[u].data.getAd() + " " + node[u].data.getSoyad());
+
+        Lpic[JPC] = new JLabel(Pic);
+
+        panel[JPC].add(Lpic[JPC]); // cant put same pic to this label
+        panel[JPC].add(T3);
+
+        //System.out.println("AAAA: " + panel[JPC]);
+        f.add(panel[JPC]);
+
+        if (isMarried == true) {
+            JPC += 2;
+        } else {
+            JPC++;
+        }
+
+    }
+
+}
+// Kisi class
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package displaygraphics;
+
+import java.util.*;
+import java.util.ArrayList;
+
+/**
+ *
+ * @author xandros
+ */
+public class Kisi {
+
+    /// Chos is just for test you should delete it
+    String chos;
+
+    public String getChos() {
+        return chos;
+    }
+
+    public void setChos(String chos) {
+        this.chos = chos;
+    }
+    ///-----
+
+    private int id;
+    private String ad;
+    private String soyad;
+    private Date dogum = new Date();
+    private String anneAdi;
+    private String BabaAdi;
+    private String KanGrubu;
+    private String Meslek;
+
+    private String KizlikSoyadi;
+    private String cinsiyet;
+
+    // EXTRA
+    private String esi;
+    private String medeniHali;
+    private int EsID;
+
+    public String getEsi() {
+        return esi;
+    }
+
+    public String getMedeniHali() {
+        return medeniHali;
+    }
+
+    public void setEsi(String esi) {
+        this.esi = esi;
+    }
+
+    public void setMedeniHali(String medeniHali) {
+        this.medeniHali = medeniHali;
+    }
+
+    //-------
+    public Kisi(String KizlikSoyadi, String cinsiyet) {
+        this.KizlikSoyadi = KizlikSoyadi;
+        this.cinsiyet = cinsiyet;
+    }
+
+    public Kisi() {
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getAd() {
+        return ad;
+    }
+
+    public String getSoyad() {
+        return soyad;
+    }
+
+    public Date getDogum() {
+        return dogum;
+    }
+
+    public String getAnneAdi() {
+        return anneAdi;
+    }
+
+    public String getBabaAdi() {
+        return BabaAdi;
+    }
+
+    public String getKanGrubu() {
+        return KanGrubu;
+    }
+
+    public String getMeslek() {
+        return Meslek;
+    }
+
+    public String getKizlikSoyadi() {
+        return KizlikSoyadi;
+    }
+
+    public String getCinsiyet() {
+        return cinsiyet;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public void setAd(String ad) {
+        this.ad = ad;
+    }
+
+    public void setSoyad(String soyad) {
+        this.soyad = soyad;
+    }
+
+    public void setDogum(Date dogum) {
+        this.dogum = dogum;
+    }
+
+    public void setAnneAdi(String anneAdi) {
+        this.anneAdi = anneAdi;
+    }
+
+    public void setBabaAdi(String BabaAdi) {
+        this.BabaAdi = BabaAdi;
+    }
+
+    public void setKanGrubu(String KanGrubu) {
+        this.KanGrubu = KanGrubu;
+    }
+
+    public void setMeslek(String Meslek) {
+        this.Meslek = Meslek;
+    }
+
+    public void setKizlikSoyadi(String KizlikSoyadi) {
+        this.KizlikSoyadi = KizlikSoyadi;
+    }
+
+    public void setCinsiyet(String cinsiyet) {
+        this.cinsiyet = cinsiyet;
+    }
+
+    public int getEsID() {
+        return EsID;
+    }
+
+    public void setEsID(int EsID) {
+        this.EsID = EsID;
+    }
+
+    
+    
+}
+// DisplayGrahpics Class
+
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Main.java to edit this template
+ */
+package displaygraphics;
+
+import java.awt.*;
+
+import java.util.*;
+
+public class DisplayGraphics extends Canvas {
+
+    int n;
+    int s;
+    Node node[];
+
+    int cont1 = 0, cont2 = 0, cont3 = 0, cont4 = 0;
+
+    public DisplayGraphics(int n, Node node[]) {
+
+        this.node = node;
+        this.n = n;
+
+    }
+
+    public int NS(Node s) // Node searcher
+    {
+        int index;
+
+        System.out.println("NL func");
+
+        for (int i = 0; i < n; i++) {
+            if (node[i] == s) {
+                return i;
+            }
+
+        }
+
+        System.out.println("Big error (NS func)");
+        return 0;
+
+    }
+
+    public void LL(Graphics g, int u, int x1, int y1, int x2, int y2) // the continues
+    {
+
+        y1 += 30;
+        y2 += 50;
+
+        System.out.println("LL func");
+        /*
+        System.out.println("SS: " + node[u].children.size());
+        System.out.println("POS: " + x1 + ", " + y1 + ", " + x2 + ", " + y2);
+        */
+
+        if (node[u].children.size() == 1) {
+
+            y1 += 50;
+            y2 += 50;
+
+            g.setColor(Color.ORANGE);
+
+            if (u != 0) {
+                g.drawLine(x1 - 30, y1 - 35, x2 + 30, y2 - 105); //  -----
+                g.drawLine(x1, y1 - 15, x2, y2 + 30);
+            } else {
+                g.drawLine(x1, y1 - 60, x2, y2 + 30);
+            }
+
+            LL(g, NS(node[u].children.get(0)), x1, y1, x2, y2 - 20);
+
+        }
+
+        if (node[u].children.size() == 2) {
+            
+            g.setColor(Color.BLUE);
+            
+            g.drawLine(x1, y1-10 , x2, y2-20);
+            
+            y1 += 50;
+            y2 += 50;
+
+            x1 -= 120;
+            x2 -= 120;
+
+            if (u != 0) {
+                for (int i = 0; i < node[u].children.size(); i++) {
+                    g.setColor(Color.BLUE);
+                    g.drawLine(x1, y1 , x2, y2 + 10);
+
+                    LL(g, NS(node[u].children.get(i)), x1, y1 + 15, x2, y2-5);
+
+                    x1 += 240;
+                    x2 += 240;
+
+                }
+
+                g.drawLine(x1 - 480, y1, x2 - 240, y2 - 70); //  -----
+                g.drawLine(x1 - 420, y1 - 35, x2 - 320, y2 - 105); //  -----
+
+            } else {
+
+                x1 -= 160;
+                x2 -= 160;
+                
+
+                g.drawLine(x1 + 280, y1 - 60, x2 + 280, y2 - 60 + 10);
+                for (int i = 0; i < node[u].children.size(); i++) {
+                    g.setColor(Color.BLUE);
+                    g.drawLine(x1 + 145, y1, x2 + 145, y2 + 30);
+
+                    LL(g, NS(node[u].children.get(i)), x1 + 145, y1, x2 + 145, y2);
+
+                    x1 += 280;
+                    x2 += 280;
+
+                }
+
+                g.drawLine(x1 - 415, y1, x2 - 135, y2 - 50); //  -----
+
+            }
+
+        }
+
+        if (node[u].children.size() == 3) {
+
+            g.setColor(Color.RED);
+
+            if (u == 0) {
+                System.out.println("cont3: 0");
+
+                g.drawLine(260, 80, 1160, 80); //  -----
+                x1 -= 450;
+                x2 -= 450;
+
+                for (int i = 0; i < node[u].children.size(); i++) {
+                    g.setColor(Color.RED);
+                    g.drawLine(x1, y1, x2, y2 + 30);
+
+                    int in = NS(node[u].children.get(i));
+
+                    LL(g, in, x1, y1, x2, y2);
+
+                    x1 += 450;
+                    x2 += 450;
+
+                }
+
+            } else {
+                y1 += 50;
+                y2 += 50;
+
+                x1 -= 100;
+                x2 -= 100;
+
+                for (int i = 0; i < node[u].children.size(); i++) {
+                    g.setColor(Color.RED);
+                    g.drawLine(x1, y1, x2, y2);
+
+                    LL(g, NS(node[u].children.get(i)), x1, y1, x2, y2 + 30);
+
+                    x1 += 100;
+                    x2 += 100;
+
+                }
+
+                g.drawLine(x1 - 300, y1, x2 - 100, y2 - 70); //  -----
+                g.drawLine(x1 - 220, y1 - 35, x2 - 180, y2 - 105); //  ----- 
+            }
+
+            cont3++;
+
+        }
+
+        if (node[u].children.size() == 4) {
+            
+            g.setColor(Color.GRAY);
+
+            if (u == 0) {
+                x1 -= 520;
+                x2 -= 520;
+
+                g.drawLine(190, 80, 1225, 80); //  -----
+
+                for (int i = 0; i < node[u].children.size(); i++) {
+                    g.setColor(Color.GRAY);
+                    g.drawLine(x1, y1, x2, y2 + 20);
+
+                    LL(g, NS(node[u].children.get(i)), x1, y1-10, x2, y2-10);
+
+                    x1 += 345;
+                    x2 += 345;
+                }
+
+            }
+            
+            else
+            {
+                x1 -= 140;
+                x2 -= 140;
+
+                g.drawLine(x1, y1+50, x2+275, y1+50); //  -----
+
+                for (int i = 0; i < node[u].children.size(); i++) {
+                    g.setColor(Color.GRAY);
+                    g.drawLine(x1, y1+50, x2, y2 + 80);
+
+                    LL(g, NS(node[u].children.get(i)), x1, y1+20, x2, y2+20);
+
+                    x1 += 92;
+                    x2 += 92;
+                    
+                }
+                
+               
+                g.drawLine(x1 - 250, y1 + 15 , x2 - 200, y2 -55); //  ----- 
+                
+            }
+        }
+
+    }
+
+    public void paint(Graphics g) {
+
+        /*
+        g.setColor(Color.DARK_GRAY);
+        
+        g.drawLine(550, 50, 650, 50); //   ---
+        g.drawLine(600, 50, 600, 80); //    |
+        g.drawLine(500, 80, 700, 80); //  -----
+        g.drawLine(500, 80, 500, 110); // |
+        g.drawLine(700, 80, 700, 110); //     |
+
+        g.setColor(Color.CYAN);
+        //g.drawLine(A.get(0), A.get(1), A.get(2), A.get(3));
+         */
+        g.setColor(Color.cyan);
+        g.drawLine(600, 50, 800, 50); //   ---
+        g.drawLine(710, 50, 710, 80); //    |
+
+        LL(g, s, 710, 50, 710, 80);
+
+        // contttttttttttttt
+        /*
+        g.drawLine(550, 50, 650, 50); //   ---
+        g.drawLine(600, 50, 600, 80); //    |
+        g.drawLine(500, 80, 700, 80); //  -----
+        /*
+        g.drawLine(500, 80, 500, 110); // |
+        g.drawLine(700, 80, 700, 110); //     |
+         */
+ /*
+        for (int i = 0; i < n; i++) { 
+            
+        }
+        
+        for (int i = 0; i < node[0].children.size(); i++) {
+           
+            g.drawLine(400, 80, 800, 80); //  -----
+        }
+         */
+    }
+
+}
